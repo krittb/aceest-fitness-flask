@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.git/
+.github/
+.gitignore
+.dockerignore
+htmlcov/
+.coverage
+*.md
+Jenkinsfile
+venv/
+.venv/
+*.db
