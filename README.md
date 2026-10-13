@@ -154,3 +154,14 @@ Create a **Pipeline** job -> *Pipeline script from SCM* -> Git ->
 Script Path `Jenkinsfile`, then **Build Now**. The pipeline wipes the
 workspace, pulls the latest code, lints, builds the Docker images, runs Pytest
 inside the container and smoke-tests the runtime image.
+
+## Pipeline Evidence
+
+**Jenkins build (all stages green)**
+![Jenkins stage view](docs/jenkins-build.png)
+
+**Jenkins console output**
+![Jenkins console](docs/jenkins-console.png)
+
+**GitHub Actions run**
+![GitHub Actions](docs/github-actions.png)
