@@ -11,7 +11,6 @@ pipeline {
     }
 
     triggers {
-        // Fallback if the GitHub webhook is unreachable: poll SCM every 5 min
         pollSCM('H/5 * * * *')
     }
 
@@ -23,8 +22,8 @@ pipeline {
     stages {
         stage('Clean Workspace & Checkout') {
             steps {
-                deleteDir()          // guarantees a clean build
-                checkout scm         // latest code from GitHub
+                deleteDir()
+                checkout scm
             }
         }
 
@@ -52,7 +51,15 @@ pipeline {
 
         stage('Automated Testing (in Docker)') {
             steps {
-                sh 'docker run --rm -v "$PWD:/out" ${IMAGE_NAME}:test pytest -v --junitxml=/out/test-results.xml'
+                sh '''
+                    docker rm -f aceest_test || true
+                    set +e
+                    docker run --name aceest_test ${IMAGE_NAME}:test pytest -v --junitxml=/tmp/test-results.xml
+                    rc=$?
+                    docker cp aceest_test:/tmp/test-results.xml test-results.xml || true
+                    docker rm -f aceest_test
+                    exit $rc
+                '''
             }
             post {
                 always {
@@ -64,14 +71,21 @@ pipeline {
         stage('Smoke Test') {
             steps {
                 sh '''
-                    docker run -d --rm --name aceest_smoke_${BUILD_NUMBER} -p 5050:5000 ${IMAGE_NAME}:latest
-                    sleep 5
-                    curl --fail http://localhost:5050/health
+                    docker rm -f aceest_smoke || true
+                    docker run -d --name aceest_smoke ${IMAGE_NAME}:latest
+                    for i in $(seq 1 15); do
+                        if docker exec aceest_smoke python -c "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')"; then
+                            exit 0
+                        fi
+                        sleep 2
+                    done
+                    docker logs aceest_smoke
+                    exit 1
                 '''
             }
             post {
                 always {
-                    sh 'docker stop aceest_smoke_${BUILD_NUMBER} || true'
+                    sh 'docker rm -f aceest_smoke || true'
                 }
             }
         }

@@ -138,3 +138,19 @@ controlled, clean build environment.
   - `infra/<name>` — Docker / CI / Jenkins changes
 - Commit messages are imperative and descriptive, e.g.
   `Add BMI endpoint with input validation`, `Fix flake8 E127 in add_member`.
+
+## Running Jenkins (Docker)
+
+Jenkins runs in a container with Python, Git and the Docker CLI, sharing the
+host Docker daemon (`jenkins/Dockerfile`, `jenkins/docker-compose.yml`).
+
+```bash
+docker compose -f jenkins/docker-compose.yml up -d --build
+# open http://localhost:8080  (setup wizard disabled for this demo setup)
+```
+
+Create a **Pipeline** job -> *Pipeline script from SCM* -> Git ->
+`https://github.com/krittb/aceest-fitness-flask.git`, branch `*/main`,
+Script Path `Jenkinsfile`, then **Build Now**. The pipeline wipes the
+workspace, pulls the latest code, lints, builds the Docker images, runs Pytest
+inside the container and smoke-tests the runtime image.
